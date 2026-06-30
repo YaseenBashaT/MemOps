@@ -48,5 +48,32 @@
       manual→automated cert arc across INC-2024-0301, INC-2024-0905, INC-2025-0301.
 - [x] Committed: "feat: Phase 2 -- seed 17 incidents into consolidated graph, verified cross-incident recall with cost tracking"
 
-## Phase 3 — (pending)
+## Phase 3 — Full FastAPI Backend (8 endpoints) ✅
+Architecture rule held: routes import only `memory_service`; cognee stays behind
+that one gateway. Two sources of truth — Cognee graph (semantic recall / insights
+/ graph viz) + a structured JSON store (exact records for list/detail/resolve,
+keeps those endpoints LLM-free). Every endpoint built AND tested with a real
+response before moving on.
+
+- [x] POST /api/incidents — logs incident into consolidated graph (remember) + store; optional fields default
+- [x] GET /api/incidents — dashboard list (basic fields, newest-first) — no LLM
+- [x] GET /api/incidents/{id} — full detail incl. slack/jira/commits; 404 on miss — no LLM
+- [x] POST /api/alerts — recall() → suggested_fix + ranked historical_context cards (graph-aware)
+- [x] PATCH /api/incidents/{id}/resolve — marks resolved + runs improve(); returns graph delta + reinforced same-service connections
+- [x] GET /api/graph — D3-ready {nodes:[{id,label,type,group}], links:[{source,target,relationship}], stats} from the live Cognee graph (166 nodes / 387 edges)
+- [x] GET /api/insights — 2-3 proactive insights from a recall across the whole graph (numbered-list parsing + degenerate-answer retry)
+- [x] POST /api/forget — prunes a named dataset; guards the shared `incidents` dataset
+
+**Key fix — ladybug single-writer lock:** each dataset has its own `.lbug` graph
+file; the default engine reads an empty global graph. memory_service resolves the
+`incidents` dataset's own engine, and ALWAYS closes+evicts it after each read
+(`_read_graph_data`) — otherwise a lingering open handle blocks every later
+remember()/improve() in the server process with "Lock is held by PID …".
+
+- [x] test_endpoints.py — exercises the real ASGI app in-process via httpx (sandbox reaps detached uvicorn)
+- [x] bootstrap_store.py — repopulates the gitignored runtime store from seed (no LLM)
+- [x] backend/data/ gitignored (runtime state, regenerable)
+- [x] Phase 3 LLM spend ≈ <$0.02 (cumulative well under the $2 cap)
+
+## Phase 4 — (pending)
 - [ ] TBD

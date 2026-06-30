@@ -9,6 +9,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routes.health import router as health_router
+from backend.routes.incidents import router as incidents_router
+from backend.routes.alerts import router as alerts_router
+from backend.routes.graph import router as graph_router
+from backend.routes.insights import router as insights_router
+from backend.routes.forget import router as forget_router
 
 
 @asynccontextmanager
@@ -29,3 +34,8 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(incidents_router)
+app.include_router(alerts_router)
+app.include_router(graph_router)
+app.include_router(insights_router)
+app.include_router(forget_router)
